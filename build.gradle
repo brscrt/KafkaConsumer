@@ -1,0 +1,61 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+     classpath "se.transmode.gradle:gradle-docker:1.2"
+  }
+}
+
+apply plugin: 'application'
+apply plugin: 'docker'
+apply plugin: 'java'
+ 
+repositories {
+    mavenCentral()
+}
+
+mainClassName = 'mykafka.MyConsumer'
+
+                             
+dependencies {
+	compile group: 'org.apache.kafka', name: 'kafka_2.11', version: '0.10.0.0'
+    compile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.2.2'
+}
+
+task copyConf(type: Copy) {
+    from System.getProperty('user.dir') + "/conf"
+    into "$buildDir/conf"
+}
+
+task createConf {
+    def conf = file("$buildDir/conf")
+    outputs.dir conf    
+    doLast {
+        conf.mkdirs()
+        copyConf.execute()
+    }
+}
+
+distributions {
+    main {
+        contents {
+            from(createConf) { into "/conf" }
+        }
+    }
+}
+
+docker {
+    baseImage = 'brscrt/java-8'
+    maintainer = 'Baris Cirit "brscrt@gmail.com"'
+}
+
+distDocker {
+    tag = 'brscrt/kafkaconsumer'
+      version = 'latest'
+    
+    push = project.hasProperty('push') ? project.property('push') : false
+} 
+
+
+task wrapper(type: Wrapper) { gradleVersion = '2.14' }
