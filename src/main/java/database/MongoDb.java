@@ -15,7 +15,8 @@ public class MongoDb {
 	public void addToTable(String table, String key, String value) {
 		MongoClient mongoClient = null;
 		try {
-			mongoClient = new MongoClient("localhost", 27017);
+			//mongoClient = new MongoClient("localhost",27017); //for direct running in ubuntu
+			mongoClient = new MongoClient("172.17.0.1",27017);  //if this app is in docker
 			MongoDatabase db = mongoClient.getDatabase("datas");
 			// New way to get collection
 			MongoCollection<Document> collection = db.getCollection(table);
