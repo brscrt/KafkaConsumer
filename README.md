@@ -3,6 +3,11 @@ This project consumes data from Apache Kafka Producer service and writes it mong
 
 This is kafka producer project that produce data for this consumer project: https://github.com/brscrt/KafkaProducer
 
+This project is a part of [this project](https://github.com/brscrt/Volume-Weighted-Average-Price).
+
+## Dockerizing this project
+This project can be dockerized with this prepared [Dockerfile](Dockerfile). If you want to generate a Dockerfile by yourself, you can run distDocker gradle task that is situated in [build.gradle file](build.gradle).
+
 ## Add Apache Kafka and MongoDb libraries to project
 Apache Kafka and MongoDb libraries should be added as dependency. 
 
@@ -59,8 +64,6 @@ Mongodb was started as daemon (-d) without authorized and manually assigned port
 ## Consumer class
 
 ```java
-package kafka;
-
 import java.util.Arrays;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -75,9 +78,9 @@ public class MyConsumer {
 	private static KafkaConsumer<String, String> kafkaConsumer;
 
 	public static void main(String[] args) {
-
+		System.out.println("It's started!");
 		MyProperties myProperties = new MyProperties();
-		myProperties.loadProperties("myconsumer.properties");
+		myProperties.loadProperties("conf/myconsumer.properties");
 		kafkaConsumer = new KafkaConsumer<>(myProperties);
 		kafkaConsumer.subscribe(Arrays.asList("TEKTU"));
 		MongoDb mongoDb = new MongoDb();
@@ -103,12 +106,11 @@ public class MyConsumer {
 	}
 
 }
-
 ```
 
 First it loads the properties file that we specify.
 ```java
-myProperties.loadProperties("properties/myconsumer.properties");
+myProperties.loadProperties("conf/myconsumer.properties");
 ```
 Then we create KafkaProducer object with myProperties.
 ```java
@@ -129,14 +131,15 @@ mongoDb.addToTable("kafka", "TEKTU", record.value());
 
 ## Mongo class
 ```java
-public class MongoDb {
+public class MongoDb {	
 
 	public void addToTable(String table, String key, String value) {
 		MongoClient mongoClient = null;
 		try {
-			mongoClient = new MongoClient("localhost", 27017);
+			//mongoClient = new MongoClient("localhost",27017); //for direct running in ubuntu
+			mongoClient = new MongoClient("172.17.0.1",27017);  //if this app is in docker
 			MongoDatabase db = mongoClient.getDatabase("datas");
-
+			
 			MongoCollection<Document> collection = db.getCollection(table);
 
 			Map<String, Object> map = new HashMap<String, Object>();
@@ -144,8 +147,10 @@ public class MongoDb {
 			map.put("data", value);
 
 			collection.insertOne(new Document(map));
+			System.out.println("Added to mongodb");
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println("Failed to add to mongodb");
 		} finally {
 			mongoClient.close();
 		}
