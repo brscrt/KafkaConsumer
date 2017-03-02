@@ -18,7 +18,7 @@ public class MongoDb {
 			//mongoClient = new MongoClient("localhost",27017); //for direct running in ubuntu
 			mongoClient = new MongoClient("172.17.0.1",27017);  //if this app is in docker
 			MongoDatabase db = mongoClient.getDatabase("datas");
-			// New way to get collection
+			
 			MongoCollection<Document> collection = db.getCollection(table);
 
 			Map<String, Object> map = new HashMap<String, Object>();
